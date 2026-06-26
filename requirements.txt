@@ -1,0 +1,4 @@
+torch>=1.13
+transformers>=4.30
+tokenizers>=0.13
+numpy>=1.19
