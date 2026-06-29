@@ -142,14 +142,6 @@ class SequenceDataset(torch.utils.data.Dataset):
         return {"input_ids": torch.tensor(self.examples[idx], dtype=torch.long)}
 
 
-def make_training_args(**kwargs):
-    """TrainingArguments wrapper tolerant of the eval_strategy rename (>=4.46)."""
-    try:
-        return TrainingArguments(eval_strategy="epoch", **kwargs)
-    except TypeError:
-        return TrainingArguments(evaluation_strategy="epoch", **kwargs)
-
-
 def preprocess_logits_for_metrics(logits, labels):
     """Keep only the argmax so we don't hold full-vocab logits in memory."""
     if isinstance(logits, tuple):
@@ -236,7 +228,8 @@ def cmd_train(args):
         mlm_probability=args.mlm_probability,
     )
 
-    training_args = make_training_args(
+    training_args = TrainingArguments(
+        eval_strategy="epoch",
         output_dir=args.output_dir,
         overwrite_output_dir=True,
         num_train_epochs=args.epochs,
