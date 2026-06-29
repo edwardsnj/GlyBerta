@@ -227,7 +227,10 @@ def cmd_train(args):
         mlm=True,
         mlm_probability=args.mlm_probability,
     )
-
+    warmup_ratio = 0.05
+    total_training_samples = len(train_seqs)
+    total_steps = (total_training_samples // per_device_train_batch_size) * num_train_epochs
+    warmup_steps = int(total_steps * warmup_ratio_value)
     training_args = TrainingArguments(
         eval_strategy="epoch",
         output_dir=args.output_dir,
@@ -236,7 +239,7 @@ def cmd_train(args):
         per_device_eval_batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         weight_decay=0.01,
-        warmup_ratio=0.05,
+        warmup_steps=warmup_steps,
         save_strategy="epoch",
         save_total_limit=1,
         logging_steps=50,
