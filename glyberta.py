@@ -302,7 +302,7 @@ def cmd_evaluate(args):
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, mlm=True, mlm_probability=args.mlm_probability
     )
-    training_args = make_training_args(
+    training_args = TrainingArguments(
         output_dir=args.output_dir,
         per_device_eval_batch_size=args.batch_size,
         report_to=[],
