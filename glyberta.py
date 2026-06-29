@@ -231,7 +231,6 @@ def cmd_train(args):
     training_args = TrainingArguments(
         eval_strategy="epoch",
         output_dir=args.output_dir,
-        overwrite_output_dir=True,
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,
