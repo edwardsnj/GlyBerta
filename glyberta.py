@@ -229,8 +229,8 @@ def cmd_train(args):
     )
     warmup_ratio = 0.05
     total_training_samples = len(train_seqs)
-    total_steps = (total_training_samples // per_device_train_batch_size) * num_train_epochs
-    warmup_steps = int(total_steps * warmup_ratio_value)
+    total_steps = (total_training_samples // args.batch_size) * args.epochs
+    warmup_steps = int(total_steps * warmup_ratio)
     training_args = TrainingArguments(
         eval_strategy="epoch",
         output_dir=args.output_dir,
