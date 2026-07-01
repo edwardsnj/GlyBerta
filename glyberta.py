@@ -183,6 +183,12 @@ def split_data(sequences, val_frac, test_frac, seed):
 # train
 # ---------------------------------------------------------------------------
 def cmd_train(args):
+    if args.seed is None:
+        args.seed = random.randrange(2**32)
+        print(f"No --seed provided; using random seed {args.seed} "
+              f"(pass --seed {args.seed} to repeat this run).")
+    else:
+        print(f"Using seed {args.seed}.")
     set_seed(args.seed)
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -309,7 +315,6 @@ def evaluate_model(trainer):
 # evaluate
 # ---------------------------------------------------------------------------
 def cmd_evaluate(args):
-    set_seed(args.seed)
     test_path = os.path.join(args.output_dir, "test.txt")
     if not os.path.exists(test_path):
         raise FileNotFoundError(
@@ -328,7 +333,6 @@ def cmd_evaluate(args):
         output_dir=args.output_dir,
         per_device_eval_batch_size=args.batch_size,
         report_to=[],
-        seed=args.seed,
     )
     trainer = Trainer(
         model=model,
@@ -396,15 +400,15 @@ def build_parser():
 
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--output_dir", default="./glyberta-model")
-    common.add_argument("--seed", type=int, default=None,
-                        help="Random seed. If omitted, a random seed is chosen and printed "
-                             "so the run can be reproduced with --seed.")
     common.add_argument("--mlm_probability", type=float, default=0.15)
     common.add_argument("--batch_size", type=int, default=32)
     common.add_argument("--max_len", type=int, default=128)
 
     pt = sub.add_parser("train", parents=[common], help="Train + evaluate the MLM.")
     pt.add_argument("--data", required=True, help="Text file, one IUPAC sequence per line.")
+    pt.add_argument("--seed", type=int, default=None,
+                    help="Random seed. If omitted, a random seed is chosen and printed "
+                         "so the run can be reproduced with --seed.")
     pt.add_argument("--test_frac", type=float, default=0.10)
     pt.add_argument("--epochs", type=float, default=20)
     pt.add_argument("--learning_rate", type=float, default=5e-4)
@@ -427,14 +431,8 @@ def build_parser():
 
 def main():
     args = build_parser().parse_args()
-    if args.seed is None:
-        args.seed = random.randrange(2**32)
-        print(f"No --seed provided; using random seed {args.seed} "
-              f"(pass --seed {args.seed} to repeat this run).")
-    else:
-        print(f"Using seed {args.seed}.")
     args.func(args)
 
-print("GlyBerta v1.0.3")
+print("GlyBerta v1.0.4")
 if __name__ == "__main__":
     main()
