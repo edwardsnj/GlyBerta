@@ -208,7 +208,7 @@ def cmd_train(args):
     if n_tok:
         print(f"Test out-of-vocabulary rate: {n_unk}/{n_tok} = {n_unk / n_tok:.3%}")
 
-    test_ids = tokenizer(val_seqs, add_special_tokens=False)["input_ids"]
+    val_ids = tokenizer(val_seqs, add_special_tokens=False)["input_ids"]
     n_unk = sum(tok == unk_id for ids in val_ids for tok in ids)
     n_tok = sum(len(ids) for ids in val_ids)
     if n_tok:
