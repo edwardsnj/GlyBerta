@@ -58,7 +58,7 @@ from tokenizers.processors import RobertaProcessing
 from transformers import (
     RobertaConfig,
     RobertaForMaskedLM,
-    RobertaTokenizerFast,
+    PreTrainedTokenizerFast,
     DataCollatorForLanguageModeling,
     Trainer,
     TrainingArguments,
@@ -110,7 +110,7 @@ def build_tokenizer(train_sequences, max_len):
     )
     backend.enable_truncation(max_length=max_len)
 
-    tokenizer = RobertaTokenizerFast(
+    tokenizer = PreTrainedTokenizerFast(
         tokenizer_object=backend,
         bos_token="<s>",
         eos_token="</s>",
@@ -293,7 +293,7 @@ def cmd_evaluate(args):
         raise FileNotFoundError(
             f"{test_path} not found — run `train` first, or pass --data."
         )
-    tokenizer = RobertaTokenizerFast.from_pretrained(args.output_dir)
+    tokenizer = PreTrainedTokenizerFast.from_pretrained(args.output_dir)
     model = RobertaForMaskedLM.from_pretrained(args.output_dir)
     test_seqs = read_sequences(args.data) if args.data else read_sequences(test_path)
     max_len = tokenizer.model_max_length
@@ -349,7 +349,7 @@ def embed(sequences, tokenizer, model, device):
 
 def cmd_compare(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    tokenizer = RobertaTokenizerFast.from_pretrained(args.output_dir)
+    tokenizer = PreTrainedTokenizerFast.from_pretrained(args.output_dir)
     model = RobertaForMaskedLM.from_pretrained(args.output_dir).to(device).eval()
 
     embs = embed([args.seq1, args.seq2], tokenizer, model, device)
