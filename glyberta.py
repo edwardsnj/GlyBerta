@@ -161,16 +161,19 @@ def compute_metrics(eval_pred):
     return {"masked_accuracy": float(correct) / float(mask.sum())}
 
 
-def split_data(sequences, test_frac, seed):
+def split_data(sequences, val_frac, test_frac, seed):
     rng = random.Random(seed)
     idx = list(range(len(sequences)))
     rng.shuffle(idx)
     n_test = max(1, int(round(len(sequences) * test_frac)))
+    n_val = max(1, int(round((len(sequences) * val_frac))))
     test_idx = set(idx[:n_test])
-    train = [sequences[i] for i in idx if i not in test_idx]
-    test = [sequences[i] for i in idx[:n_test]]
-    return train, test
-
+    val_idx = set(idx[n_test:(n_test+n_val)])
+    train_idx = set(idx[(n_test+n_val):])
+    train = [sequences[i] for i in train_idx]
+    test = [sequences[i] for i in test_idx]
+    val = [sequences[i] for i in val_idx]
+    return train, val, test
 
 # ---------------------------------------------------------------------------
 # train
@@ -182,12 +185,14 @@ def cmd_train(args):
     sequences = read_sequences(args.data)
     print(f"Loaded {len(sequences)} sequences from {args.data}")
 
-    train_seqs, test_seqs = split_data(sequences, args.test_frac, args.seed)
-    print(f"Train: {len(train_seqs)}   Test: {len(test_seqs)}")
+    train_seqs, val_seqs, test_seqs = split_data(sequences, args.test_frac, args.test_frac, args.seed)
+    print(f"Train: {len(train_seqs)}   Validation: {len(val_seqs)}   Test: {len(test_seqs)}")
 
     # Persist the exact splits for reproducible evaluation.
     with open(os.path.join(args.output_dir, "train.txt"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(train_seqs))
+    with open(os.path.join(args.output_dir, "validation.txt"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(val_seqs))
     with open(os.path.join(args.output_dir, "test.txt"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(test_seqs))
 
@@ -203,7 +208,14 @@ def cmd_train(args):
     if n_tok:
         print(f"Test out-of-vocabulary rate: {n_unk}/{n_tok} = {n_unk / n_tok:.3%}")
 
+    test_ids = tokenizer(val_seqs, add_special_tokens=False)["input_ids"]
+    n_unk = sum(tok == unk_id for ids in val_ids for tok in ids)
+    n_tok = sum(len(ids) for ids in val_ids)
+    if n_tok:
+        print(f"Validation out-of-vocabulary rate: {n_unk}/{n_tok} = {n_unk / n_tok:.3%}")
+
     train_ds = SequenceDataset(train_seqs, tokenizer, args.max_len)
+    val_ds = SequenceDataset(val_seqs, tokenizer, args.max_len)
     test_ds = SequenceDataset(test_seqs, tokenizer, args.max_len)
 
     config = RobertaConfig(
@@ -253,7 +265,7 @@ def cmd_train(args):
         args=training_args,
         data_collator=data_collator,
         train_dataset=train_ds,
-        eval_dataset=test_ds,
+        eval_dataset=val_ds,
         compute_metrics=compute_metrics,
         preprocess_logits_for_metrics=preprocess_logits_for_metrics,
     )
