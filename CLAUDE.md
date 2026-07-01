@@ -46,6 +46,10 @@ The design goal is a **structure-respecting, interpretable tokenizer that needs 
 
 - **Comparison** (`cmd_compare` / `embed`): embeds sequences with `model.roberta` (encoder only, no MLM head) and mean-pools the final hidden states over real tokens, explicitly masking out special and pad tokens, then reports cosine similarity.
 
+## Versioning
+
+[glyberta.py](glyberta.py) prints a version string at import (`print("GlyBerta v1.0.2")`, near the bottom of the file). Whenever you change `glyberta.py` so it differs from the version committed to GitHub, increment this version number as part of the same change.
+
 ## Conventions
 
 - All CLI subcommands share a `common` argparse parent (`--output_dir`, `--seed`, `--mlm_probability`, `--batch_size`, `--max_len`); `build_parser` wires `train`/`evaluate`/`compare` to `cmd_*` handlers via `set_defaults(func=...)`.
