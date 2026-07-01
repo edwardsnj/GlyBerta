@@ -259,6 +259,11 @@ def cmd_train(args):
         warmup_steps=warmup_steps,
         save_strategy="epoch",
         save_total_limit=1,
+        # Keep the checkpoint with the highest validation masked accuracy and
+        # reload it at the end of training, rather than the last epoch's weights.
+        load_best_model_at_end=True,
+        metric_for_best_model="masked_accuracy",
+        greater_is_better=True,
         logging_steps=50,
         report_to=[],
         seed=args.seed,
@@ -422,6 +427,6 @@ def main():
     args = build_parser().parse_args()
     args.func(args)
 
-print("GlyBerta v1.0.1")
+print("GlyBerta v1.0.2")
 if __name__ == "__main__":
     main()
