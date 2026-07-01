@@ -447,24 +447,19 @@ def run(command):
         glyberta.run(f"train --data {IUPAC_sequences} --epochs 50")
         glyberta.run("evaluate --output_dir ./glyberta-model")
 
-    Equivalent to invoking the CLI with the same arguments. Returns the parsed
-    args namespace (with the resolved --seed filled in).
+    Equivalent to invoking the CLI with the same arguments.
     """
     argv = shlex.split(command) if isinstance(command, str) else list(command)
     args = build_parser().parse_args(argv)
     if args.seed is None:
         args.seed = random.randrange(2**32)
-        print(f"No --seed provided; using random seed {args.seed} "
-              f"(pass --seed {args.seed} to repeat this run).")
-    else:
-        print(f"Using seed {args.seed}.")
+        print(f"Random seed: {args.seed}")
     args.func(args)
-    return args
 
 
 def main():
     run(sys.argv[1:])
 
-print("GlyBerta v1.0.7")
+print("GlyBerta v1.0.8")
 if __name__ == "__main__":
     main()

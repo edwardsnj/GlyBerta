@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Working in this repo
+
+Always describe and show the proposed changes (e.g. the before/after code) before asking whether to apply them. Do not edit files until the user has approved.
+
 ## What this is
 
 GlyBERTa trains a RoBERTa masked language model (MLM) from scratch over glycan IUPAC-condensed sequences, then uses the learned encoder to measure semantic similarity between glycans. The entire pipeline — tokenizer training, data splitting, model training, evaluation, and comparison — lives in the single script [glyberta.py](glyberta.py). [demonstration.ipynb](demonstration.ipynb) is a Colab-oriented walkthrough of the same flow.
@@ -32,7 +36,7 @@ There is no test suite, linter, or build step. Validate changes by running `trai
 
 ### Seeds and reproducibility
 
-`--seed` defaults to a random value. When omitted, `run()` picks one, prints it, and echoes the exact `--seed N` needed to reproduce the run. Pass `--seed` explicitly to reproduce a prior run. The seed flows into `set_seed`, the train/val/test split, and HuggingFace `TrainingArguments`, and is shared by all subcommands.
+`--seed` defaults to a random value. When omitted, `run()` picks one and prints it as `Random seed: <n>`; when `--seed` is passed explicitly, nothing is printed. Pass `--seed` explicitly to reproduce a prior run. The seed flows into `set_seed`, the train/val/test split, and HuggingFace `TrainingArguments`, and is shared by all subcommands.
 
 ## Architecture
 
