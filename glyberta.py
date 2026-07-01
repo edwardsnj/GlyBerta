@@ -45,6 +45,8 @@ import json
 import math
 import os
 import random
+import shlex
+import sys
 
 import numpy as np
 import torch
@@ -437,8 +439,19 @@ def build_parser():
     return p
 
 
-def main():
-    args = build_parser().parse_args()
+def run(command):
+    """Run a GlyBERTa command from a string (or list of tokens).
+
+    Convenient for notebooks, e.g.:
+
+        glyberta.run(f"train --data {IUPAC_sequences} --epochs 50")
+        glyberta.run("evaluate --output_dir ./glyberta-model")
+
+    Equivalent to invoking the CLI with the same arguments. Returns the parsed
+    args namespace (with the resolved --seed filled in).
+    """
+    argv = shlex.split(command) if isinstance(command, str) else list(command)
+    args = build_parser().parse_args(argv)
     if args.seed is None:
         args.seed = random.randrange(2**32)
         print(f"No --seed provided; using random seed {args.seed} "
@@ -446,7 +459,12 @@ def main():
     else:
         print(f"Using seed {args.seed}.")
     args.func(args)
+    return args
 
-print("GlyBerta v1.0.6")
+
+def main():
+    run(sys.argv[1:])
+
+print("GlyBerta v1.0.7")
 if __name__ == "__main__":
     main()
