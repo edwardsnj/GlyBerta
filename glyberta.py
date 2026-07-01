@@ -202,17 +202,18 @@ def cmd_train(args):
 
     # Report how many test glyco-letters are unseen (-> <unk>), as a data check.
     unk_id = tokenizer.convert_tokens_to_ids("<unk>")
-    test_ids = tokenizer(test_seqs, add_special_tokens=False)["input_ids"]
-    n_unk = sum(tok == unk_id for ids in test_ids for tok in ids)
-    n_tok = sum(len(ids) for ids in test_ids)
-    if n_tok:
-        print(f"Test out-of-vocabulary rate: {n_unk}/{n_tok} = {n_unk / n_tok:.3%}")
-
+    
     val_ids = tokenizer(val_seqs, add_special_tokens=False)["input_ids"]
     n_unk = sum(tok == unk_id for ids in val_ids for tok in ids)
     n_tok = sum(len(ids) for ids in val_ids)
     if n_tok:
         print(f"Validation out-of-vocabulary rate: {n_unk}/{n_tok} = {n_unk / n_tok:.3%}")
+
+    test_ids = tokenizer(test_seqs, add_special_tokens=False)["input_ids"]
+    n_unk = sum(tok == unk_id for ids in test_ids for tok in ids)
+    n_tok = sum(len(ids) for ids in test_ids)
+    if n_tok:
+        print(f"Test out-of-vocabulary rate: {n_unk}/{n_tok} = {n_unk / n_tok:.3%}")
 
     train_ds = SequenceDataset(train_seqs, tokenizer, args.max_len)
     val_ds = SequenceDataset(val_seqs, tokenizer, args.max_len)
