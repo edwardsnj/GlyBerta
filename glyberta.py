@@ -418,6 +418,6 @@ def main():
     args = build_parser().parse_args()
     args.func(args)
 
-
+print("GlyBerta v1.0")
 if __name__ == "__main__":
     main()
