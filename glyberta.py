@@ -435,6 +435,6 @@ def main():
         print(f"Using seed {args.seed}.")
     args.func(args)
 
-print("GlyBerta v1.0.2")
+print("GlyBerta v1.0.3")
 if __name__ == "__main__":
     main()
