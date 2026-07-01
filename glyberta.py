@@ -64,6 +64,10 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
+from transformers.utils import logging as hf_logging
+
+# Silence the "Writing model shards" tqdm bar emitted on every checkpoint save.
+hf_logging.disable_progress_bar()
 
 # ---------------------------------------------------------------------------
 # Glyco-letter pre-tokenization
@@ -418,6 +422,6 @@ def main():
     args = build_parser().parse_args()
     args.func(args)
 
-print("GlyBerta v1.0")
+print("GlyBerta v1.0.1")
 if __name__ == "__main__":
     main()
