@@ -26,9 +26,13 @@ python glyberta.py compare --output_dir ./glyberta-model \
 
 There is no test suite, linter, or build step. Validate changes by running `train` on `sample_sequences.txt`.
 
+### Programmatic / notebook entry point
+
+`glyberta.run(command)` runs any of the above subcommands from a single string (or a pre-split token list) instead of the shell, e.g. `glyberta.run(f"train --data {path} --epochs 50")`. This is what [demonstration.ipynb](demonstration.ipynb) uses. `main()` (the CLI entry point) is just `run(sys.argv[1:])`, so the CLI and notebook paths are identical. `run` splits with `shlex` (quoted args work), resolves the seed, dispatches to the `cmd_*` handler, and returns the parsed args namespace.
+
 ### Seeds and reproducibility
 
-`--seed` defaults to a random value. When omitted, `main()` picks one, prints it, and echoes the exact `--seed N` needed to reproduce the run. Pass `--seed` explicitly to reproduce a prior run. The seed flows into `set_seed`, the train/val/test split, and HuggingFace `TrainingArguments`.
+`--seed` defaults to a random value. When omitted, `run()` picks one, prints it, and echoes the exact `--seed N` needed to reproduce the run. Pass `--seed` explicitly to reproduce a prior run. The seed flows into `set_seed`, the train/val/test split, and HuggingFace `TrainingArguments`, and is shared by all subcommands.
 
 ## Architecture
 
@@ -40,15 +44,15 @@ The design goal is a **structure-respecting, interpretable tokenizer that needs 
 
 - **Data splitting** (`split_data`): shuffles by seed into train/val/test. Note `cmd_train` calls `split_data(sequences, args.test_frac, args.test_frac, args.seed)` — the same `--test_frac` value is deliberately reused for both the validation and test fractions. The three splits are persisted to `train.txt` / `validation.txt` / `test.txt` in `--output_dir` so `evaluate` can reload the exact test set later.
 
-- **Model & training** (`cmd_train`): a `RobertaForMaskedLM` built fresh from a `RobertaConfig` sized by CLI args (`--hidden_size`, `--num_layers`, `--num_heads`; `intermediate_size` is `hidden_size * 4`; `max_position_embeddings` is `--max_len + 2` for RoBERTa's padding offset). `DataCollatorForLanguageModeling` performs padding and dynamic MLM masking at batch time (`SequenceDataset` only stores token ids). Best-model selection uses **minimum validation loss** (`metric_for_best_model="eval_loss"`, `greater_is_better=False`, `load_best_model_at_end=True`), so the saved checkpoint is the lowest-val-loss epoch, not the last.
+- **Model & training** (`cmd_train`): a `RobertaForMaskedLM` built fresh from a `RobertaConfig` sized by CLI args (`--hidden_size`, `--num_layers`, `--num_heads`; `intermediate_size` is `hidden_size * 4`; `max_position_embeddings` is `--max_len + 2` for RoBERTa's padding offset). `DataCollatorForLanguageModeling` performs padding and dynamic MLM masking at batch time (`SequenceDataset` only stores token ids). Best-model selection uses **minimum validation loss** (`metric_for_best_model="eval_loss"`, `greater_is_better=False`, `load_best_model_at_end=True`), so the saved checkpoint is the lowest-val-loss epoch, not the last. After training, `cmd_train` recovers the retained epoch by matching `trainer.state.best_metric` against `trainer.state.log_history` and prints it.
 
-- **Metrics**: `preprocess_logits_for_metrics` reduces logits to argmax before they leave the GPU (avoids holding full-vocab logits in memory); `compute_metrics` reports masked-token top-1 accuracy over non-`-100` label positions. `evaluate_model` adds perplexity (`exp(loss)`).
+- **Metrics**: `preprocess_logits_for_metrics` reduces logits to argmax before they leave the GPU (avoids holding full-vocab logits in memory); `compute_metrics` reports masked-token top-1 accuracy over non-`-100` label positions. `evaluate_model` adds perplexity (`exp(loss)`). Note MLM masking is random per evaluation pass, so a re-run of `trainer.evaluate()` (e.g. the final "Test-set evaluation" block, which actually runs on the validation set) will not exactly equal any per-epoch row even for the same weights.
 
 - **Comparison** (`cmd_compare` / `embed`): embeds sequences with `model.roberta` (encoder only, no MLM head) and mean-pools the final hidden states over real tokens, explicitly masking out special and pad tokens, then reports cosine similarity.
 
 ## Versioning
 
-[glyberta.py](glyberta.py) prints a version string at import (`print("GlyBerta v1.0.2")`, near the bottom of the file). Whenever you change `glyberta.py` so it differs from the version committed to GitHub, increment this version number as part of the same change.
+[glyberta.py](glyberta.py) prints a version string at import (`print("GlyBerta v1.0.7")`, near the bottom of the file). Whenever you change `glyberta.py` so it differs from the version committed to GitHub, increment this version number as part of the same change.
 
 ## Conventions
 
