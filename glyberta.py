@@ -282,6 +282,18 @@ def cmd_train(args):
 
     trainer.train()
 
+    # Report which epoch's checkpoint was retained as the best model. best_metric
+    # is the exact eval_loss logged for the winning epoch, so we match it back to
+    # its log_history row to recover the epoch number.
+    best_metric = trainer.state.best_metric
+    best_epoch = next(
+        (entry["epoch"] for entry in trainer.state.log_history
+         if entry.get("eval_loss") == best_metric),
+        None,
+    )
+    print(f"\nRetained best model from epoch {best_epoch} "
+          f"(validation loss {best_metric:.4f}, checkpoint {trainer.state.best_model_checkpoint}).")
+
     # Save the final model + tokenizer.
     trainer.save_model(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
@@ -435,6 +447,6 @@ def main():
         print(f"Using seed {args.seed}.")
     args.func(args)
 
-print("GlyBerta v1.0.5")
+print("GlyBerta v1.0.6")
 if __name__ == "__main__":
     main()
