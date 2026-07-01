@@ -259,11 +259,11 @@ def cmd_train(args):
         warmup_steps=warmup_steps,
         save_strategy="epoch",
         save_total_limit=1,
-        # Keep the checkpoint with the highest validation masked accuracy and
-        # reload it at the end of training, rather than the last epoch's weights.
+        # Keep the checkpoint with the lowest validation loss and reload it at
+        # the end of training, rather than the last epoch's weights.
         load_best_model_at_end=True,
-        metric_for_best_model="masked_accuracy",
-        greater_is_better=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
         logging_steps=50,
         report_to=[],
         seed=args.seed,
@@ -396,7 +396,9 @@ def build_parser():
 
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--output_dir", default="./glyberta-model")
-    common.add_argument("--seed", type=int, default=42)
+    common.add_argument("--seed", type=int, default=None,
+                        help="Random seed. If omitted, a random seed is chosen and printed "
+                             "so the run can be reproduced with --seed.")
     common.add_argument("--mlm_probability", type=float, default=0.15)
     common.add_argument("--batch_size", type=int, default=32)
     common.add_argument("--max_len", type=int, default=128)
@@ -425,6 +427,12 @@ def build_parser():
 
 def main():
     args = build_parser().parse_args()
+    if args.seed is None:
+        args.seed = random.randrange(2**32)
+        print(f"No --seed provided; using random seed {args.seed} "
+              f"(pass --seed {args.seed} to repeat this run).")
+    else:
+        print(f"Using seed {args.seed}.")
     args.func(args)
 
 print("GlyBerta v1.0.2")
